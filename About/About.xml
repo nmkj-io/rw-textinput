@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-  <name>Text Input</name>
+  <name>Linux Input Helper</name>
   <author>nmkj</author>
   <packageId>nmkj.textinput</packageId>
   <url>https://github.com/nmkj-io/rw-textinput</url>
@@ -16,7 +16,7 @@
     <li>Ludeon.RimWorld.Royalty</li>
     <li>Ludeon.RimWorld.Ideology</li>
   </loadAfter>
-  <description>Pops a GTK window to input texts.\nテキスト入力のためにGTKのウィンドウを表示します。</description>
+  <description>Pops a GUI window to input texts.\nテキスト入力のためにGUIウィンドウを表示します。</description>
   <modDependencies>
     <li>
         <packageId>brrainz.harmony</packageId>

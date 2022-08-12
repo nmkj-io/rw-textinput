@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Timers;
 using HarmonyLib;
 using Verse;
@@ -10,7 +11,7 @@ namespace TextInput
     public class Settings : ModSettings
     {
         public static int Interval = 500;
-        public static string StringBuffer;
+        public static string IntervalStringBuffer;
 
         public override void ExposeData()
         {
@@ -18,6 +19,7 @@ namespace TextInput
             base.ExposeData();
         }
     }
+
     public class TextInput : Mod
     {
         public static Timer WindowTimer { get; } = new Timer();
@@ -28,13 +30,13 @@ namespace TextInput
         public TextInput(ModContentPack content) : base(content)
         {
             _settings = GetSettings<Settings>();
-            
+
             WindowTimer.AutoReset = false;
             WindowTimer.Interval = Settings.Interval;
             WindowTimer.Elapsed += OpenWindow;
 
             _content = content;
-            
+
             var harmony = new Harmony("nmkj.textinput");
             harmony.PatchAll();
         }
@@ -43,37 +45,66 @@ namespace TextInput
         {
             var listingStandard = new Listing_Standard();
             listingStandard.Begin(inRect);
-            listingStandard.Label("Timer Interval");
-            listingStandard.IntEntry(ref Settings.Interval, ref Settings.StringBuffer);
+            listingStandard.Label("Call Interval (milliseconds)");
+            listingStandard.IntEntry(ref Settings.Interval, ref Settings.IntervalStringBuffer);
             listingStandard.End();
             base.DoSettingsWindowContents(inRect);
         }
 
-        public override string SettingsCategory() => "Text Input";
+        public override string SettingsCategory() => "Linux Input Helper";
 
         private static void OpenWindow(object src, ElapsedEventArgs e)
         {
-            var scriptPath = Path.Combine(_content.RootDir, "helper.py");
-            
+            var helperPath = Path.Combine(_content.RootDir, "rwtext-bin");
+            // var txtPath = Path.Combine(GenFilePaths.SaveDataFolderPath, "linux_input_helper.txt");
+            //
+            // if (File.Exists(txtPath))
+            // {
+            //     File.Delete(txtPath);
+            // }
+            //
+            // File.CreateText(txtPath);
+
+            // File.WriteAllText(txtPath, text);
+
+#if DEBUG
+            Log.Message($"[Text Input] Invoking the helper script at {helperPath}");
+#endif
+
             var startInfo = new ProcessStartInfo
             {
-                FileName = "python3",
-                Arguments = scriptPath,
+                FileName = helperPath,
+                Arguments = "", // $"\"{txtPath}\"",
                 UseShellExecute = false,
                 RedirectStandardOutput = true
             };
             var process = new Process();
             process.StartInfo = startInfo;
 
-#if DEBUG
-            Log.Message($"[Text Input] Invoking the helper script at {scriptPath}");
-#endif
             process.Start();
             process.WaitForExit();
+
+#if DEBUG
+            Log.Message($"[Text Input] Process ended with {process.ExitCode}.");
+#endif
+
+            if (process.ExitCode == 0)
+            {
+                var text = process.StandardOutput.ReadToEnd();
+#if DEBUG
+                Log.Message($"[Text Input] stdout: {text}");
+#endif
+
+                GUIUtility.systemCopyBuffer = text;
+            }
+
+
 #if DEBUG
             var clipboard = GUIUtility.systemCopyBuffer;
-            Log.Message($"[Text Input] Process ended. Your text: {clipboard}");
+            Log.Message($"[Text Input] Your clipboard: {clipboard}");
 #endif
+
+            // File.Delete(txtPath);
         }
     }
 
@@ -86,9 +117,9 @@ namespace TextInput
             public static void Postfix()
             {
                 var e = Event.current;
-                if (!e.control) return;
-                if (e.keyCode != KeyCode.I) return;
-
+                var iKey = e.keyCode == KeyCode.I;
+                if (!iKey || !e.control) return;
+                
                 TextInput.WindowTimer.Interval = Settings.Interval;
                 TextInput.WindowTimer.Enabled = true;
             }
