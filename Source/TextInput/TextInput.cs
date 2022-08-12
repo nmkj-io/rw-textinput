@@ -55,7 +55,7 @@ namespace TextInput
 
         private static void OpenWindow(object src, ElapsedEventArgs e)
         {
-            var helperPath = Path.Combine(_content.RootDir, "rwtext-bin");
+            var helperPath = Path.Combine(_content.RootDir, "rwtext-go");
             // var txtPath = Path.Combine(GenFilePaths.SaveDataFolderPath, "linux_input_helper.txt");
             //
             // if (File.Exists(txtPath))
