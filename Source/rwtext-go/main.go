@@ -148,6 +148,7 @@ func main() {
 	})
 	win.Add(box)
 
+	win.SetKeepAbove(true)
 	win.SetDefaultSize(*winHeight, *winWidth)
 
 	// Recursively show all widgets contained in this window.

@@ -14,7 +14,7 @@ namespace TextInput
 {
     public class Settings : ModSettings
     {
-        public static int Interval = 500;
+        public static int Interval = 100;
         public static bool PreventOnScreenKeyboard;
         public static int InputWidth = 0;
         public static int InputHeight = 0;
@@ -88,6 +88,7 @@ namespace TextInput
 #endif
 
             var stateObject = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+            stateObject.SelectAll();
             var width = Settings.InputWidth < 1 ? -1 : Settings.InputWidth;
             var height = Settings.InputHeight < 1 ? -1 : Settings.InputHeight;
             var stateText = stateObject.text.Replace("\n", "\\n");
