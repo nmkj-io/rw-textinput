@@ -17,7 +17,11 @@
     <li>Ludeon.RimWorld.Ideology</li>
   </loadAfter>
   <description><![CDATA[Pops a GUI window to input texts. Now contains initial support for Steam Deck.
-テキスト入力のためにGUIウィンドウを表示します。Steam Deckに暫定対応しています。]]></description>
+テキスト入力のためにGUIウィンドウを表示します。Steam Deckに暫定対応しています。
+
+<size=17><b>Note（注意）:</b></size>
+Only supports x86_64 Linux Version. Unable to run in Windows nor macOS.
+x86_64のLinux版のみ対応しています。WindowsやmacOSでは使用できません。]]></description>
   <modDependencies>
     <li>
         <packageId>brrainz.harmony</packageId>
