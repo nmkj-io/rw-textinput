@@ -16,10 +16,8 @@
     <li>Ludeon.RimWorld.Royalty</li>
     <li>Ludeon.RimWorld.Ideology</li>
   </loadAfter>
-  <description><![CDATA[
-Pops a GUI window to input texts. Now contains initial support for Steam Deck.
-テキスト入力のためにGUIウィンドウを表示します。Steam Deckに暫定対応しています。
-]]></description>
+  <description><![CDATA[Pops a GUI window to input texts. Now contains initial support for Steam Deck.
+テキスト入力のためにGUIウィンドウを表示します。Steam Deckに暫定対応しています。]]></description>
   <modDependencies>
     <li>
         <packageId>brrainz.harmony</packageId>
