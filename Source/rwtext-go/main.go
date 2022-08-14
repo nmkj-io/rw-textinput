@@ -1,14 +1,24 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
+	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
 )
 
+var winWidth = flag.Int("w", -1, "width")
+var winHeight = flag.Int("h", -1, "height")
+var defaultText = flag.String("d", "", "default string")
+var textIsMultiline = flag.Bool("m", false, "multiline")
+
 func main() {
+	flag.Parse()
+
 	// Initialize GTK without parsing any command line arguments.
 	gtk.Init(nil)
 	exitCode := 1
@@ -34,9 +44,19 @@ func main() {
 	if err != nil {
 		log.Fatal("Unable to create entry:", err)
 	}
+	entryMulti, err := gtk.TextViewNew()
+	if err != nil {
+		log.Fatal("Unable to create textview:", err)
+	}
 	entry.SetActivatesDefault(true)
+	// entryMulti.SetWrapMode(gtk.WRAP_CHAR)
+	entryMulti.SetBorderWidth(5)
 
 	btn, err := gtk.ButtonNewWithLabel("Copy")
+	if err != nil {
+		log.Fatal("Unable to create button:", err)
+	}
+	cancelBtn, err := gtk.ButtonNewWithLabel("Cancel")
 	if err != nil {
 		log.Fatal("Unable to create button:", err)
 	}
@@ -44,14 +64,10 @@ func main() {
 	btn.SetHAlign(gtk.ALIGN_END)
 	btn.SetCanDefault(true)
 	btn.SetSensitive(false)
+	cancelBtn.SetHAlign(gtk.ALIGN_START)
+	cancelBtn.SetCanDefault(false)
 
-	btn.Connect("clicked", func() {
-		text, err := entry.GetText()
-		if err != nil {
-			log.Fatal("Unable to get text:", err)
-		}
-		fmt.Print(text)
-		exitCode = 0
+	cancelBtn.Connect("clicked", func() {
 		gtk.MainQuit()
 	})
 	entry.Connect("changed", func() {
@@ -61,18 +77,78 @@ func main() {
 		}
 		btn.SetSensitive(text != "")
 	})
-	win.SetDefault(btn)
+	buf, err := entryMulti.GetBuffer()
+	if err != nil {
+		log.Fatal("Unable to get text buffer:", err)
+	}
+	if *defaultText != "" {
+		*defaultText = strings.ReplaceAll(*defaultText, "\\n", "\n")
+		entry.SetText(*defaultText)
+		buf.SetText(*defaultText)
+	}
+	buf.Connect("changed", func() {
+		text, err := buf.GetText(buf.GetStartIter(), buf.GetEndIter(), true)
+		if err != nil {
+			log.Fatal("Unable to get text:", err)
+		}
+		btn.SetSensitive(text != "")
+	})
+	btn.Connect("clicked", func() {
+		var (
+			text string
+			err  error
+		)
+		if *textIsMultiline {
+			text, err = buf.GetText(buf.GetStartIter(), buf.GetEndIter(), true)
+		} else {
+			text, err = entry.GetText()
+		}
+		if err != nil {
+			log.Fatal("Unable to get text:", err)
+		}
+		text = strings.ReplaceAll(text, "\\n", "\n")
+		fmt.Print(text)
+		exitCode = 0
+		gtk.MainQuit()
+	})
+	if !*textIsMultiline {
+		win.SetDefault(btn)
+	}
 
-	box, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 2)
+	box, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 4)
+	if err != nil {
+		log.Fatal("Unable to create box:", err)
+	}
+	boxBtn, err := gtk.BoxNew(gtk.ORIENTATION_HORIZONTAL, 0)
 	if err != nil {
 		log.Fatal("Unable to create box:", err)
 	}
 	box.PackStart(label, true, true, 0)
-	box.PackStart(entry, true, true, 0)
-	box.PackStart(btn, true, true, 0)
+	if *textIsMultiline {
+		box.PackStart(entryMulti, true, true, 0)
+	} else {
+		box.PackStart(entry, true, true, 0)
+	}
+	boxBtn.PackStart(cancelBtn, true, true, 0)
+	boxBtn.PackStart(btn, true, true, 0)
+	box.PackStart(boxBtn, true, true, 0)
 
 	// Add the label to the window.
+	win.SetBorderWidth(4)
+	win.SetResizable(true)
+	win.Connect("key-press-event", func(_ *gtk.Window, event *gdk.Event) {
+		key := gdk.EventKeyNewFromEvent(event)
+		if key.KeyVal() == gdk.KEY_Escape {
+			gtk.MainQuit()
+		}
+		mask := gtk.AcceleratorGetDefaultModMask()
+		if *textIsMultiline && (key.State()&uint(mask) == gdk.CONTROL_MASK) && key.KeyVal() == gdk.KEY_Return {
+			btn.Activate()
+		}
+	})
 	win.Add(box)
+
+	win.SetDefaultSize(*winHeight, *winWidth)
 
 	// Recursively show all widgets contained in this window.
 	win.ShowAll()
